@@ -1,0 +1,4 @@
+[submodule "forked_afnetworking"]
+	path = AFNetworking
+	url = git@github.com:mohannad-hassan/AFNetworking.git
+	branch = master
