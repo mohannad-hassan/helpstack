@@ -20,8 +20,8 @@
 //OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 //THE SOFTWARE.
 
-#import <AFNetworking/AFHTTPRequestOperationManager.h>
-#import <AFNetworkActivityIndicatorManager.h>
+#import "FAFHTTPRequestOperationManager.h"
+#import "FAFNetworkActivityIndicatorManager.h"
 
 #import "HSZenDeskGear.h"
 #import "HSZenDeskTicket.h"
@@ -53,19 +53,19 @@
         self.staffEmailAddress = staffEmailAddress;
         self.apiToken = apiToken;
         
-        self.networkManager = [[AFHTTPRequestOperationManager alloc] initWithBaseURL:[NSURL URLWithString:instanceUrl]];
+        self.networkManager = [[FAFHTTPRequestOperationManager alloc] initWithBaseURL:[NSURL URLWithString:instanceUrl]];
         
-        [self.networkManager setRequestSerializer:[AFJSONRequestSerializer serializer]];
-        [self.networkManager setResponseSerializer:[AFJSONResponseSerializer serializer]];
+        [self.networkManager setRequestSerializer:[FAFJSONRequestSerializer serializer]];
+        [self.networkManager setResponseSerializer:[FAFJSONResponseSerializer serializer]];
         
-        [[AFNetworkActivityIndicatorManager sharedManager] setEnabled:YES];
+        [[FAFNetworkActivityIndicatorManager sharedManager] setEnabled:YES];
     }
     return self;
 }
 
 - (void)showArticlesInSection:(NSString *)sectionID failure:(void (^)(NSError *))failure success:(void (^)(NSMutableArray *))success
 {
-    [self.networkManager GET:[NSString stringWithFormat:@"/api/v2/help_center/sections/%@/articles.json", sectionID] parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    [self.networkManager GET:[NSString stringWithFormat:@"/api/v2/help_center/sections/%@/articles.json", sectionID] parameters:nil success:^(FAFHTTPRequestOperation *operation, id responseObject) {
         NSDictionary *response = (NSDictionary *)responseObject;
         NSNumber *numEntries = [response objectForKey:@"count"];
         
@@ -88,7 +88,7 @@
             success(nil);
         }
         
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+    } failure:^(FAFHTTPRequestOperation *operation, NSError *error) {
         failure(error);
     }];
 }
@@ -101,7 +101,7 @@
         
         if(!self.sectionID) {
             NSString *url = @"/api/v2/help_center/sections.json";
-            [self.networkManager GET:url parameters:nil success:^(AFHTTPRequestOperation *operation, id responseObject) {
+            [self.networkManager GET:url parameters:nil success:^(FAFHTTPRequestOperation *operation, id responseObject) {
                 
                 NSDictionary *response = (NSDictionary *)responseObject;
                 NSNumber *numOfTopics = [response objectForKey:@"count"];
@@ -124,7 +124,7 @@
                     success(nil);
                 }
                 
-            } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+            } failure:^(FAFHTTPRequestOperation *operation, NSError *error) {
                 failure(error);
             }];
         } else {
@@ -203,11 +203,11 @@
                                            };
         
         
-        [self.networkManager POST:url parameters:ticketDictionary success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self.networkManager POST:url parameters:ticketDictionary success:^(FAFHTTPRequestOperation *operation, id responseObject) {
             // Save ticket details so next time it is ready for user to use.
             HSZenDeskTicket* ticket = [[HSZenDeskTicket alloc] initWithTicketFields:responseObject];
             operationSuccess(ticket);
-        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        } failure:^(FAFHTTPRequestOperation *operation, NSError *error) {
             operationFailure(error);
         }];
     } failure:^(NSError* error) {
@@ -229,7 +229,7 @@
     
     NSString* URLString = [[NSURL URLWithString:[NSString stringWithFormat:@"api/v2/uploads.json?filename=%@", attachment.fileName] relativeToURL:[NSURL URLWithString:self.instanceUrl]] absoluteString];
     
-    AFHTTPRequestOperationManager* attachmentnetworkManager = [[AFHTTPRequestOperationManager alloc] initWithBaseURL:[NSURL URLWithString:self.instanceUrl]];
+    FAFHTTPRequestOperationManager* attachmentnetworkManager = [[FAFHTTPRequestOperationManager alloc] initWithBaseURL:[NSURL URLWithString:self.instanceUrl]];
     
     [attachmentnetworkManager.requestSerializer setAuthorizationHeaderFieldWithUsername:[self.staffEmailAddress stringByAppendingString:@"/token"] password:self.apiToken];
     
@@ -247,10 +247,10 @@
     [attachmentnetworkManager.responseSerializer setAcceptableContentTypes:[NSSet setWithObject:@"text/plain"]];
     
     // Use [self.networkManager HTTPRequestOperationWithRequest
-    AFHTTPRequestOperation *operation = [attachmentnetworkManager HTTPRequestOperationWithRequest:request success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    FAFHTTPRequestOperation *operation = [attachmentnetworkManager HTTPRequestOperationWithRequest:request success:^(FAFHTTPRequestOperation *operation, id responseObject) {
         NSDictionary* uploadDict = [responseObject objectForKey:@"upload"];
         success(@[[uploadDict objectForKey:@"token"]]);
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+    } failure:^(FAFHTTPRequestOperation *operation, NSError *error) {
         operationFailure(error);
     }];
     
@@ -264,7 +264,7 @@
     NSDictionary* parameter = @{@"include":@"users"};
     [self.networkManager.requestSerializer setAuthorizationHeaderFieldWithUsername:[self.staffEmailAddress stringByAppendingString:@"/token"] password:self.apiToken];
     
-    [self.networkManager GET:url parameters:parameter success:^(AFHTTPRequestOperation *operation, id responseObject) {
+    [self.networkManager GET:url parameters:parameter success:^(FAFHTTPRequestOperation *operation, id responseObject) {
         // Read all data
         NSArray* auditsDictionary = [responseObject objectForKey:@"audits"];
         NSArray* usersDictionary = [responseObject objectForKey:@"users"];
@@ -285,7 +285,7 @@
         
         success(filteredArray);
         
-    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+    } failure:^(FAFHTTPRequestOperation *operation, NSError *error) {
         
         failure(error);
         
@@ -303,12 +303,12 @@
         NSString* url = [NSString stringWithFormat:@"api/v2/requests/%@.json", ticketId];
         NSDictionary* parameter = @{@"request":@{ @"comment":@{ @"body":message, @"uploads":attachmentTokens } }};
         [self.networkManager.requestSerializer setAuthorizationHeaderFieldWithUsername:[user.email stringByAppendingString:@"/token"] password:self.apiToken];
-        [self.networkManager PUT:url parameters:parameter success:^(AFHTTPRequestOperation *operation, id responseObject) {
+        [self.networkManager PUT:url parameters:parameter success:^(FAFHTTPRequestOperation *operation, id responseObject) {
             
             HSZenDeskTicketUpdate* update = [[HSZenDeskTicketUpdate alloc] initUserReplyWithAuthorName:user.name message:message attachments:attachments];
             success(update);
             
-        } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        } failure:^(FAFHTTPRequestOperation *operation, NSError *error) {
             
             failure(error);
             

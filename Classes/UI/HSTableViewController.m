@@ -69,9 +69,9 @@
 
         [self.gear.networkManager.reachabilityManager startMonitoring];
 
-        [self.gear.networkManager.reachabilityManager setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+        [self.gear.networkManager.reachabilityManager setReachabilityStatusChangeBlock:^(FAFNetworkReachabilityStatus status) {
 
-            if (status == AFNetworkReachabilityStatusUnknown || status == AFNetworkReachabilityStatusNotReachable) {
+            if (status == FAFNetworkReachabilityStatusUnknown || status == FAFNetworkReachabilityStatusNotReachable) {
                 currentNavController.toolbarHidden = NO;
             }else{
                 currentNavController.toolbarHidden = YES;
